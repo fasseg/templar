@@ -204,11 +204,12 @@ void templar_error(const char *msg) {
     exit(EXIT_FAILURE);
 }
 
-void show_help() {
+void show_help(const char *prog_name) {
     printf("%s v%s\n\n", TEMPLAR_NAME, TEMPLAR_VERSION);
     printf("Templar generates a program skeleton for you\n\n");
-    printf("Usage: %s [options] <lang> <name>\n", TEMPLAR_NAME);
+    printf("Usage: %s [options] <lang> <name>\n", prog_name);
     printf("\nOptions:\n");
-    printf("\t-h/--help\t\t\tShow this help dialog and exit\n");
+    printf("\t-h/--help\t\tShow this help dialog and exit\n");
+    printf("\t-v/--verbose\t\tShow verbose output\n");
     printf("\n");
 }
