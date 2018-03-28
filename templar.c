@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
 		switch(opt) {
 			case 'h': 
 				show_help(argv[0]);
+                exit(EXIT_SUCCESS);
 				break;
 		}
 	}
@@ -181,4 +182,5 @@ void show_help() {
     printf("Usage: %s [options] <lang> <name>\n", TEMPLAR_NAME);
     printf("\nOptions:\n");
     printf("\t-h/--help\t\t\tShow this help dialog and exit\n");
+    printf("\n");
 }
