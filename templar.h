@@ -10,6 +10,18 @@
 #define TEMPLAR_NAME "Templar"
 #define LANG_C 1
 
+struct project {
+    char *name;
+    size_t name_len;
+    char *dir_name;
+    size_t dir_name_len;
+    char *hdr_name;
+    size_t hdr_name_len;
+    char *src_name;
+    size_t src_name_len;
+};
+
+typedef struct project project;
 
 void show_help();
 
@@ -19,10 +31,10 @@ int parse_lang(char *lang);
 
 int create_c_skel(const char *name);
 
-int create_src(const char *dir_name, size_t dir_len, const char *name, size_t name_len);
+int create_src(project proj);
 
-int create_dir(const char *name); 
+int create_dir(project proj); 
 
-int create_hdr(const char *dir_name, size_t dir_len, const char *name, size_t name_len);
+int create_hdr(project proj);
 
-int create_make(const char *dir_name, size_t dir_len, const char *name);
+int create_make(project proj);
