@@ -27,7 +27,7 @@ void show_help();
 
 void templar_error(const char *msg);
 
-int parse_lang(char *lang);
+int parse_lang(const char *lang);
 
 int create_c_skel(const char *name);
 

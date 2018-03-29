@@ -186,14 +186,17 @@ int create_dir(project proj) {
     return mkdir(proj.dir_name, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 }
 
-int parse_lang(char *lang) {
+int parse_lang(const char *lang) {
 
-    int *ch = (int *) lang;
+    char *lc = malloc(sizeof(char) * strlen(lang) + 1);
+    strncpy(lc, lang, sizeof(char) * strlen(lang) + 1);
+
+    int *ch = (int *) lc;
 
     // convert to lower case
     for (;*ch;++ch) *ch = tolower(*ch);
 
-    if (strcmp(lang, "c") == 0) {
+    if (strcmp(lc, "c") == 0) {
         return LANG_C;
     }
 
