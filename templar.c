@@ -200,6 +200,7 @@ int parse_lang(const char *lang) {
         return LANG_C;
     }
 
+    free(lc);
     return -1;
 }
 
