@@ -114,7 +114,8 @@ int create_make(project proj) {
     fprintf(fp, "CC=gcc\nCFLAGS=-I. -g\nDEPS=%s.h\n", proj.dir_name);
     fprintf(fp, "\n%%.o: %%.c $(DEPS)\n\t$(CC) -g -c -o $@ $< $(CFLAGS)\n\n");
     fprintf(fp, "all: %s.o\n\t$(CC) $(CFLAGS) -o %s %s.o\n\n", proj.name, proj.name, proj.name);
-    fprintf(fp, "clean:\n\trm %s.o\n\trm %s\n", proj.name, proj.name);
+    fprintf(fp, "clean:\n\trm %s.o\n\trm %s\n\n", proj.name, proj.name);
+    fprintf(fp, "install:\n\tinstall -m 755 -o root %s /usr/local/bin/\n", proj.name);
 
     if (fclose(fp) == EOF) {
         templar_error("Unable to close make file");
