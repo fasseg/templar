@@ -1,36 +1,40 @@
 #include "templar.h"
 
-static int verbose = 0;
+static bool verbose = false;
+static bool flag_getopt = false;
+static bool flag_usage = false;
+static char indent[] = {0x20, 0x20, 0x20, 0x20};
 
 static struct option long_opts[] = {
     {"help", no_argument, 0, 'h'},
-    {"verbose", no_argument, 0, 'v'}
+    {"verbose", no_argument, 0, 'v'},
+    {"getopt", no_argument, 0, 'g'}
 };
-
 
 int main(int argc, char **argv) {
     int opt;
     int opt_idx = 0;
 
-    while ((opt = getopt_long(argc, argv, "hv", long_opts, &opt_idx)) > 0) {
+    while ((opt = getopt_long(argc, argv, "hvgu", long_opts, &opt_idx)) > 0) {
         switch(opt) {
             case 'h': 
                 show_help(argv[0]);
                 exit(EXIT_SUCCESS);
                 break;
             case 'v':
-                verbose = 1;
-                break;                
+                verbose = true;
+                break;        
+            case 'g':
+                flag_getopt = true;
+                break;
+            case 'u':
+                flag_usage = true;
+                break;
         }
     }
 
-    if (argc - optind != 2) {
+    if (argc - optind != 1) {
         templar_error("Invalid number of arguments");
-    }
-
-    int lang = parse_lang(argv[optind++]);
-    if (lang < 0) {
-        templar_error("Invalid language");
     }
 
     const char *name = argv[optind];
@@ -38,11 +42,7 @@ int main(int argc, char **argv) {
         templar_error("Name can not be empty");
     }
 
-    switch(lang) {
-        case LANG_C:
-            create_c_skel(name);
-            break;
-    }
+    create_c_skel(name);
 
     return 0;
 }
@@ -90,7 +90,7 @@ int create_c_skel(const char *name) {
     if (create_make(proj) < 0) {
         templar_error("Unable to create Makefile");
     }
-    
+
     free(proj.name);
     free(proj.dir_name);
     free(proj.hdr_name);
@@ -145,6 +145,17 @@ int create_hdr(project proj) {
 
     fprintf(fp, "#include <stdlib.h>\n#include <stdio.h>\n");
 
+    if (flag_getopt) {
+        fprintf(fp, "#include <getopt.h>\n");
+    }
+
+    fprintf(fp, "#define PROGRAM_NAME \"%c%s\"\n", toupper(*proj.name), (proj.name + 1));
+    fprintf(fp, "#define PROGRAM_VERSION \"0.0.1\"\n");
+
+    if (flag_usage) {
+        fprintf(fp, "void show_help(char *progr_name);\n");
+    }
+
     if (fclose(fp) == EOF) {
         templar_error("Unable to close header file");
     } 
@@ -171,7 +182,33 @@ int create_src(project proj) {
 
     fprintf(fp, "#include \"%s.h\"\n", proj.dir_name);
     fprintf(fp, "\nint main(int argc, char **argv) {\n");
+    if (flag_getopt) {
+        fprintf(fp, "%sint opt;\n", &indent);
+        fprintf(fp, "%sint opt_idx = 0;\n\n", &indent);
+        fprintf(fp, "%sstatic struct option opts[] = {\n", &indent);
+        fprintf(fp, "%s%s{\"help\", no_argument, 0, 'h'}\n", &indent, &indent);
+        fprintf(fp, "%s};\n\n", &indent);
+        fprintf(fp, "%swhile((opt = getopt_long(argc, argv, \"h\", opts, &opt_idx)) > 0) {\n", &indent);
+        fprintf(fp, "%s%sswitch(opt) {\n", &indent, &indent);
+        fprintf(fp, "%s%s%scase 'h':\n", &indent, &indent, &indent);
+        fprintf(fp, "%s%s%s%sshow_help(argv[0]);\n", &indent, &indent, &indent, &indent);
+        fprintf(fp, "%s%s%s%sexit(EXIT_SUCCESS);\n", &indent, &indent, &indent, &indent);
+        fprintf(fp, "%s%s%s%sbreak;\n", &indent, &indent, &indent, &indent);
+        fprintf(fp, "%s%s}\n", &indent, &indent);
+        fprintf(fp, "%s}\n", &indent);
+    }
+
     fprintf(fp, "}\n");
+
+    if (flag_usage) {
+        fprintf(fp, "void show_help(char * progr_name) {\n");
+        fprintf(fp, "\tprintf(\"%%s v%%s\\n\", PROGRAM_NAME, PROGRAM_VERSION);\n");
+        fprintf(fp, "\tprintf(\"This is a short description of the program\\n\");\n");
+        fprintf(fp, "\tprintf(\"Usage: %%s [options]\\n\", progr_name);\n");
+        fprintf(fp, "\tprintf(\"Options:\\n\");\n");
+        fprintf(fp, "\tprintf(\"\\t-h/--help\\t\\tShow this help dialog and exit\\n\");\n");
+        fprintf(fp, "}\n");
+    }
 
     if (fclose(fp) == EOF) {
         templar_error("Unable to close source file");
@@ -186,24 +223,6 @@ int create_dir(project proj) {
     return mkdir(proj.dir_name, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 }
 
-int parse_lang(const char *lang) {
-
-    char *lc = malloc(sizeof(char) * strlen(lang) + 1);
-    strncpy(lc, lang, sizeof(char) * strlen(lang) + 1);
-
-    int *ch = (int *) lc;
-
-    // convert to lower case
-    for (;*ch;++ch) *ch = tolower(*ch);
-
-    if (strcmp(lc, "c") == 0) {
-        return LANG_C;
-    }
-
-    free(lc);
-    return -1;
-}
-
 void templar_error(const char *msg) {
     fprintf(stderr, "ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
@@ -212,9 +231,11 @@ void templar_error(const char *msg) {
 void show_help(const char *prog_name) {
     printf("%s v%s\n\n", TEMPLAR_NAME, TEMPLAR_VERSION);
     printf("Templar generates a program skeleton for you\n\n");
-    printf("Usage: %s [options] <lang> <name>\n", prog_name);
+    printf("Usage: %s [options] <name>\n", prog_name);
     printf("\nOptions:\n");
     printf("\t-h/--help\t\tShow this help dialog and exit\n");
     printf("\t-v/--verbose\t\tShow verbose output\n");
+    printf("\t-g/--getopt\t\tInclude getopt skeleton\n");
+    printf("\t-u/--usage\t\tInclude usage dialog\n");
     printf("\n");
 }
