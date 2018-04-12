@@ -153,7 +153,7 @@ int create_hdr(project proj) {
     fprintf(fp, "#define PROGRAM_VERSION \"0.0.1\"\n");
 
     if (flag_usage) {
-        fprintf(fp, "void show_help(char *progr_name);\n");
+        fprintf(fp, "\nvoid show_help(char *progr_name);\n");
     }
 
     if (fclose(fp) == EOF) {
@@ -201,7 +201,7 @@ int create_src(project proj) {
     fprintf(fp, "}\n");
 
     if (flag_usage) {
-        fprintf(fp, "void show_help(char * progr_name) {\n");
+        fprintf(fp, "\nvoid show_help(char * progr_name) {\n");
         fprintf(fp, "\tprintf(\"%%s v%%s\\n\", PROGRAM_NAME, PROGRAM_VERSION);\n");
         fprintf(fp, "\tprintf(\"This is a short description of the program\\n\");\n");
         fprintf(fp, "\tprintf(\"Usage: %%s [options]\\n\", progr_name);\n");
